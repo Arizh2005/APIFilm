@@ -9,71 +9,57 @@ use Illuminate\Support\Facades\Storage;
 class FilmController extends Controller
 {
     public function index(){
-        $films = Film::latest()->paginate(5);
-        return new FilmResource(true, 'Data Film', $films);
+        $films = Film::all();
+        return response()->json($films, 200);
     }
     public function store(Request $request)
     {
-        $request->validate([
-            'title' => 'required',
-            'description' => 'required',
-            'director' => 'required',
+        $validated = $request->validate([
+            'title' => 'required|string',
+            'description' => 'required|string',
+            'director' => 'required|string',
             'release_year' => 'required|integer',
             'genre' => 'required',
+            'poster' => 'nullable|string',
         ]);
 
+        $films = Film::create($validated);
 
-        $film = Film::create([
-            'title' => $request->title,
-            'description' => $request->description,
-            'director' => $request->director,
-            'release_year' => $request->release_year,
-            'genre' => $request->genre,
-        ]);
+        if (!$films) {
+            return response()->json(['message' => 'Gagal Menambahkan Film'], 500);
+        }
 
-        return new FilmResource(true, 'Film created successfully', $film);
+        return response()->json($films, 201);
     }
 
-    public function show($id)
+    public function show(Film $film)
     {
-        $film = Film::findOrFail($id);
+        return response()->json($film);
 
-        $film->poster = $film->poster ? Storage::url($film->poster) : null;
-
-        return new FilmResource(true, 'Film retrieved successfully', $film);
     }
 
     public function update(Request $request, Film $film)
     {
-        $request->validate([
-            'title' => 'sometimes|required',
-            'description' => 'sometimes|required',
-            'director' => 'sometimes|required',
-            'release_year' => 'sometimes|required|integer',
-            'genre' => 'sometimes|required',
+        $validated = $request->validate([
+            'title' => 'sometimes|string',
+            'description' => 'sometimes|string',
+            'director' => 'sometimes|string',
+            'release_year' => 'sometimes|integer',
+            'genre' => 'sometimes',
+            'poster' => 'nullable|string',// Ubah validasi ini
         ]);
 
-        $film->update([
-            'title' => $request->title ?? $film->title,
-            'description' => $request->description ?? $film->description,
-            'director' => $request->director ?? $film->director,
-            'release_year' => $request->release_year ?? $film->release_year,
-            'genre' => $request->genre ?? $film->genre,
-        ]);
-
-        return new FilmResource(true, 'Film updated successfully', $film);
+        $film->update($validated);
+        return response()->json($film);
     }
 
 
-    public function destroy($id)
+    public function destroy(Film $film)
     {
-        $film = Film::findOrFail($id);
-
-        Storage::disk('public')->delete($film->poster);
 
         $film->delete();
-
-        return new FilmResource(true, 'Film deleted successfully', null);
+        // do right return and return statsu code
+        return response()->json(['message' => 'Produk berhasil dihapus'], 204);
     }
     //
 }

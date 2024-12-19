@@ -17,7 +17,8 @@ return new class extends Migration
             $table->text('description');
             $table->string('director');
             $table->integer('release_year');
-            $table->string('genre'); // Kolom untuk menyimpan path poster
+            $table->string('genre');
+            $table->string('poster')->nullable(); // Kolom untuk menyimpan path poster
             $table->timestamps();
         });
     }
